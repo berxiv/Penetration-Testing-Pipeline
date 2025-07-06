@@ -7,22 +7,18 @@
                                                              
                                                              
 
-PRIMARY ENUMERATION COMMAND (FIND ALL OPEN PORTS, WEB AVAILABLE PORTS, PORT INFORMATION, DIRECTORIES FOR ALL WEB PORTS, JS ENDPOINTS, AND JSON ENDPOINTS)
-TARGET="10.10.10.245" && \
-rustscan -a $TARGET -r 1-65535 -- -sV | tee port_information.txt | grep "/tcp" | grep "open" | awk -v TARGET=$TARGET '{split($1,a,"/"); if (a[1] ~ /^[0-9]+$/) print TARGET ":" a[1]}' > port_targets.txt && \
-~/go/bin/httpx -l port_targets.txt > all_web_targets.txt && \
-cp all_web_targets.txt clean_web_targets.txt
+PRIMARY ENUMERATION COMMAND (FIND ALL OPEN PORTS, WEB AVAILABLE PORTS, WEB AVAILABLE PORTS, DIRECTORIES FOR ALL WEB PORTS, JS ENDPOINTS, AND JSON ENDPOINTS, AND PORT INFORMATION)
+powershell.exe -NoProfile -Command "& { $hostsPath = 'C:\Windows\System32\drivers\etc\hosts'; $newLine = \"10.10.10.245`tcurrentbox.htb\"; $content = Get-Content $hostsPath; if ($content -match 'currentbox\.htb') { $content = $content -replace '.*currentbox\.htb.*', $newLine } else { $content += \"`r`n$newLine\" }; Set-Content -Path $hostsPath -Value $content }"
 
-while read -r target; do domain=$(echo "$target" | awk -F[/:] '{print $3}'); [[ $domain =~ [a-zA-Z] ]] && subfinder -d $domain >> web_subdomains.txt; done < all_web_targets.txt
-
-gau $TARGET >> all_web_targets.txt
-
-katana -list all_web_targets.txt -js-crawl -silent | sort -u >> all_web_targets.txt
-
-grep -i '\.js$' all_web_targets.txt > js_web_targets.txt && grep -i '\.json$' all_web_targets.txt > json_web_targets.txt
-
+TARGET="currentbox.htb" ; \
+rustscan -a $TARGET -r 1-65535 -- -sV | tee port_information.txt | grep "/tcp" | grep "open" | awk -v TARGET=$TARGET '{split($1,a,"/"); if (a[1] ~ /^[0-9]+$/) print TARGET ":" a[1]}' > port_targets.txt ; \
+~/go/bin/httpx -l port_targets.txt > all_web_targets.txt ; \
+cp all_web_targets.txt clean_web_targets.txt ; \
+while read -r target; do domain=$(echo "$target" | awk -F[/:] '{print $3}'); [[ $domain =~ [a-zA-Z] ]] && subfinder -d $domain >> web_subdomains.txt; done < all_web_targets.txt ; \
+gau $TARGET >> all_web_targets.txt ; \
+katana -list all_web_targets.txt -js-crawl -silent | sort -u >> all_web_targets.txt ; \
+grep -i '\.js$' all_web_targets.txt > js_web_targets.txt && grep -i '\.json$' all_web_targets.txt > json_web_targets.txt ; \
 dirsearch -l clean_web_targets.txt -w /usr/share/seclists/Discovery/Web-Content/common.txt -e php,js,jpg,png,html,json,txt -t 50 --follow-redirects -o web_directories.txt --format=simple
-
 
  _____           _       _ _        _   _             
 |  ___|         | |     (_) |      | | (_)            
